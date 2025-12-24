@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: image_quality_mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - image_quality_network
+
+  backend:
+    build: .
+    container_name: image_quality_backend
+    ports:
+      - "8000:8000"
+    environment:
+      MONGODB_URL: mongodb://admin:password@mongodb:27017
+      MONGODB_DB_NAME: image_quality
+      DEBUG: "True"
+      SECRET_KEY: your-secret-key
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      AWS_REGION: ${AWS_REGION}
+    depends_on:
+      - mongodb
+    networks:
+      - image_quality_network
+    volumes:
+      - .:/app
+
+volumes:
+  mongodb_data:
+
+networks:
+  image_quality_network:
+    driver: bridge
